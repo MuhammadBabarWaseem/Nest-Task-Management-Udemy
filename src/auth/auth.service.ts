@@ -10,9 +10,8 @@ export class AuthService {
     @InjectRepository(User) private usersRepository: Repository<User>,
   ) {}
 
-  async signUp(authCredentialDto: AuthCredentialsDto): Promise<void> {
+  async createUser(authCredentialDto: AuthCredentialsDto): Promise<void> {
     const { username, password } = authCredentialDto;
-
     const user = this.usersRepository.create({ username, password });
     await this.usersRepository.save(user);
   }
