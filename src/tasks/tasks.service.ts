@@ -1,3 +1,5 @@
+import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { TaskStatus } from './tasks.status.enum';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { Repository } from 'typeorm';
@@ -12,8 +14,28 @@ export class TasksService {
     private task: Repository<Task>,
   ) {}
 
+  async getAllTask(filterDto: GetTasksFilterDto): Promise<Task[]> {
+    const { status, search } = filterDto;
+
+    const query = this.task.createQueryBuilder('task');
+
+    if (status) {
+      query.andWhere('task.status = :status', { status });
+    }
+
+    if (search) {
+      query.andWhere(
+        'LOWER(task.title) LIKE LOWER(:search) OR LOWER(task.description) LIKE LOWER(:search) ',
+        { search: `%${search}%` },
+      );
+    }
+
+    const task = await query.getMany();
+    return task;
+  }
+
   // :Promist<Task> this define return type must be a Task promise
-  async getTaskById(id: string): Promise<Task> {
+  async getTaskById(id: string) {
     const found = await this.task.findOneBy({ id });
     if (!found) {
       throw new NotFoundException(`Task ${id} not found`);
@@ -21,7 +43,7 @@ export class TasksService {
     return found;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+  async createTask(createTaskDto: CreateTaskDto) {
     const { title, description } = createTaskDto;
 
     const task = this.task.create({
@@ -32,5 +54,20 @@ export class TasksService {
 
     await this.task.save(task);
     return task;
+  }
+
+  async delete(userId: string) {
+    const result = await this.task.delete(userId);
+
+    if (result.affected === 0) {
+      return {
+        message: `User with ID ${userId} not found`,
+      };
+    }
+    return `Task With Id: ${userId} Deleted Successfully!`;
+  }
+
+  async UpdateTask(updateTaskStatusDto: UpdateTaskStatusDto, id: string) {
+    return await this.task.update(id, updateTaskStatusDto);
   }
 }
