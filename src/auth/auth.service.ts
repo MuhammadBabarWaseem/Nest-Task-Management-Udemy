@@ -1,5 +1,6 @@
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import {
   ConflictException,
   Injectable,
@@ -16,9 +17,16 @@ export class AuthService {
 
   async createUser(authCredentialDto: AuthCredentialsDto): Promise<void> {
     const { username, password } = authCredentialDto;
-    const user = this.usersRepository.create({ username, password });
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     try {
+      const user = this.usersRepository.create({
+        username,
+        password: hashedPassword,
+      });
+
       await this.usersRepository.save(user);
     } catch (error) {
       if (error.code === '23505') {
