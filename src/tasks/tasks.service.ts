@@ -74,7 +74,10 @@ export class TasksService {
     return `Task With Id: ${userId} Deleted Successfully!`;
   }
 
-  async UpdateTask(updateTaskStatusDto: UpdateTaskStatusDto, id: string) {
-    return await this.task.update(id, updateTaskStatusDto);
+  async UpdateTask(status: TaskStatus, id: string, user: User): Promise<Task> {
+    const task = await this.getTaskById(id, user);
+    task.status = status;
+    await this.task.save(task);
+    return task;
   }
 }
