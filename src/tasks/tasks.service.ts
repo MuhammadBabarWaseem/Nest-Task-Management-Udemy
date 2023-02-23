@@ -7,6 +7,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
 import { User } from 'src/auth/user.entity';
+import { GetUser } from 'src/auth/get-user.decorator';
 
 @Injectable()
 export class TasksService {
@@ -15,10 +16,14 @@ export class TasksService {
     private task: Repository<Task>,
   ) {}
 
-  async getAllTask(filterDto: GetTasksFilterDto): Promise<Task[]> {
+  async getAllTask(
+    filterDto: GetTasksFilterDto,
+    @GetUser() user: User,
+  ): Promise<Task[]> {
     const { status, search } = filterDto;
 
     const query = this.task.createQueryBuilder('task');
+    query.where({ user });
 
     if (status) {
       query.andWhere('task.status = :status', { status });
