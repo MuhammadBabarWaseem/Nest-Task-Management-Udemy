@@ -63,15 +63,15 @@ export class TasksService {
     return task;
   }
 
-  async delete(userId: string) {
-    const result = await this.task.delete(userId);
+  async delete(id: string, user: User) {
+    const result = await this.task.delete({ id, user });
 
     if (result.affected === 0) {
       return {
-        message: `User with ID ${userId} not found`,
+        message: `User with ID ${id} not found`,
       };
     }
-    return `Task With Id: ${userId} Deleted Successfully!`;
+    return `Task With Id: ${id} Deleted Successfully!`;
   }
 
   async UpdateTask(status: TaskStatus, id: string, user: User): Promise<Task> {
