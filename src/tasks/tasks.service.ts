@@ -41,8 +41,8 @@ export class TasksService {
   }
 
   // :Promist<Task> this define return type must be a Task promise
-  async getTaskById(id: string) {
-    const found = await this.task.findOneBy({ id });
+  async getTaskById(id: string, user: User) {
+    const found = await this.task.findOne({ where: { id, user } });
     if (!found) {
       throw new NotFoundException(`Task ${id} not found`);
     }
