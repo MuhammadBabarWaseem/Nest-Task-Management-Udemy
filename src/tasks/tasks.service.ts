@@ -1,9 +1,13 @@
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { Logger } from '@nestjs/common/services';
 import { TaskStatus } from './tasks.status.enum';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { Repository } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
 import { User } from 'src/auth/user.entity';
@@ -11,6 +15,7 @@ import { GetUser } from 'src/auth/get-user.decorator';
 
 @Injectable()
 export class TasksService {
+  private logger = new Logger('Task Service', { timestamp: true });
   constructor(
     @InjectRepository(Task)
     private task: Repository<Task>,
@@ -35,12 +40,19 @@ export class TasksService {
         { search: `%${search}%` },
       );
     }
-
-    const task = await query.getMany();
-    return task;
+    try {
+      const task = await query.getMany();
+      return task;
+    } catch (error) {
+      this.logger.error(
+        `Failed To Get Task For User "${user.username}".`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
-  // :Promist<Task> this define return type must be a Task promise
+  // :Promist<Task></Task> this define return type must be a Task promise
   async getTaskById(id: string, user: User) {
     const found = await this.task.findOne({ where: { id, user } });
     if (!found) {
